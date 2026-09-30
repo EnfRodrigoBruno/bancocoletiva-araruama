@@ -1,0 +1,5 @@
+sistema,agravo,ano,motivo,status
+SINAN,dengue,2024,DENGBR24 travou em read_dbc (>900s). Repetir em hardware com >16GB RAM.,pendente
+TabNet/SIM-prévias,obitos_mes,"2025,2026",datasus::sim() nao expoe 'Mês do óbito' como linha. Redundante com DTOBITO.,descartado_por_redundancia
+SINASC,micro_1997_2021,"1997,2002,2004,2006-2009,2011-2021",SINASC micro complementado em 30/09/2026 — verificar cobertura.,resolvido
+SINASC,micro_2023_2024,"2023,2024",Aguardando publicação DATASUS (marcados como sem publicacao no script 12).,aguardando_publicacao

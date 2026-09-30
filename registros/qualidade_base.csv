@@ -1,0 +1,7 @@
+tabela,anos_cobertos,primeira_ano,ultimo_ano,n_registros,n_colunas,tem_nascidos
+painel_vital,25,2000,2024,25,16,TRUE
+mortalidade_causa,25,2000,2024,419,10,NA
+mortalidade_mensal,25,2000,2024,300,6,NA
+painel_agravos,25,2000,2024,121,9,NA
+painel_imunizacao,5,2020,2024,5,8,NA
+painel_hospitalar,17,2008,2024,345,10,NA

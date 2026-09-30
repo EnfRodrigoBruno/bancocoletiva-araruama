@@ -1,0 +1,43 @@
+# ============================================================
+# .gitignore — bancocoletiva-araruama
+# ============================================================
+
+# --- Dados (regeneráveis via scripts 10–20) ---
+dados_brutos/
+dados_tratados/
+resultados/figuras/
+resultados/tabelas/
+
+# --- Ambiente R local ---
+.RData
+.Rhistory
+.Rproj.user/
+.Renviron
+
+# --- renv: biblioteca é regenerável via renv::restore() ---
+renv/library/
+renv/staging/
+renv/local/
+renv/cache/
+renv/sandbox/
+
+# --- Logs e temporários ---
+registros/*.log
+registros/tmp/
+*.log
+
+# --- Sistema operacional ---
+.DS_Store
+Thumbs.db
+*~
+
+# --- Editores ---
+.vscode/
+.idea/
+
+# --- Extensões de dados (nunca versionar) ---
+*.parquet
+*.dbc
+*.dbf
+*.fst
+*.zip

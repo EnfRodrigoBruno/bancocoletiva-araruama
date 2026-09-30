@@ -1,0 +1,26 @@
+# Ignorar dados e resultados — não são código R
+dados_brutos/
+dados_tratados/
+resultados/
+registros/
+renv/
+.git/
+.Rproj.user/
+
+# Ignorar arquivos de dados
+*.parquet
+*.dbc
+*.dbf
+*.csv
+*.log
+*.fst
+*.zip
+
+# Ignorar documentação
+*.md
+*.txt
+*.pdf
+*.html
+
+# Ignorar configs que não definem dependências
+config/
