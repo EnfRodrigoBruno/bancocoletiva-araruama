@@ -89,30 +89,30 @@ message("[22] Indicadores vitais com IC95%...")
 vital <- arrow::read_parquet(
   file.path(dir_dados_tratados, "painel_vital_araruama.parquet"))
 
+# Helper: aplica IC Poisson e prefixa as 3 colunas resultantes
+ic_poisson_prefixado <- function(df, casos, denom, mult, prefixo) {
+  ic <- ic95_poisson(df[[casos]], df[[denom]], mult)
+  names(ic) <- paste0(prefixo, c("estimativa", "ic_li", "ic_ls"))
+  ic
+}
+
 ind_vitais <- vital |>
-  dplyr::mutate(
-    ic_mort_geral = ic95_poisson(obitos_total, populacao, 1000),
-    ic_mort_inf   = ic95_poisson(obitos_infantis, nascidos_vivos, 1000),
-    ic_mort_neo   = ic95_poisson(obitos_neonatais, nascidos_vivos, 1000),
-    ic_natalidade = ic95_poisson(nascidos_vivos, populacao, 1000)
-  ) |>
-  tidyr::unnest_wider(ic_mort_geral, names_sep = "_") |>
-  tidyr::unnest_wider(ic_mort_inf,   names_sep = "_") |>
-  tidyr::unnest_wider(ic_mort_neo,   names_sep = "_") |>
-  tidyr::unnest_wider(ic_natalidade, names_sep = "_") |>
-  dplyr::rename_with(~ paste0("tx_mort_geral_", .x),
-                     dplyr::starts_with("ic_mort_geral_")) |>
-  dplyr::rename_with(~ paste0("tx_mort_inf_", .x),
-                     dplyr::starts_with("ic_mort_inf_")) |>
-  dplyr::rename_with(~ paste0("tx_mort_neo_", .x),
-                     dplyr::starts_with("ic_mort_neo_")) |>
-  dplyr::rename_with(~ paste0("tx_natalidade_", .x),
-                     dplyr::starts_with("ic_natalidade_"))
+  dplyr::bind_cols(
+    ic_poisson_prefixado(vital, "obitos_total",    "populacao",      1000,
+                         "tx_mort_geral_"),
+    ic_poisson_prefixado(vital, "obitos_infantis", "nascidos_vivos", 1000,
+                         "tx_mort_inf_"),
+    ic_poisson_prefixado(vital, "obitos_neonatais", "nascidos_vivos", 1000,
+                         "tx_mort_neo_"),
+    ic_poisson_prefixado(vital, "nascidos_vivos",  "populacao",      1000,
+                         "tx_natalidade_")
+  )
 
 salvar_parquet(ind_vitais,
                file.path(dir_dados_tratados,
                          "indicadores_vitais_ic.parquet"))
-message(sprintf("  ✓ indicadores vitais: %d anos", nrow(ind_vitais)))
+message(sprintf("  ✓ indicadores vitais: %d anos | %d colunas",
+                nrow(ind_vitais), ncol(ind_vitais)))
 
 # ------------------------------------------------------------
 # 2. Indicadores de agravos com IC95%
@@ -161,12 +161,13 @@ message(sprintf("  ✓ indicadores hospitalares: %s registros",
                 fmt_num(nrow(ind_hosp))))
 
 # ------------------------------------------------------------
-# 4. Swaroop-Uemman (mortalidade proporcional ≥50 anos)
+# 4. Swaroop-Uemman (mortalidade proporcional >= 50 anos)
 # ------------------------------------------------------------
 message("[22] Calculando Swaroop-Uemman...")
 
 sim <- arrow::read_parquet(file.path(dir_brutos_sim, "sim_araruama.parquet"))
 names(sim) <- tolower(names(sim))
+
 sim_proc <- sim |>
   dplyr::transmute(
     ano = as.integer(ano_arquivo),
@@ -174,20 +175,20 @@ sim_proc <- sim |>
   ) |>
   dplyr::filter(ano >= 2000, ano <= 2024)
 
-swaroop <- sim_proc |>
+swaroop_base <- sim_proc |>
   dplyr::group_by(ano) |>
   dplyr::summarise(
-    obitos_total = dplyr::n(),
+    obitos_total  = dplyr::n(),
     obitos_50mais = sum(idade_anos >= 50, na.rm = TRUE),
     .groups = "drop"
-  ) |>
-  dplyr::mutate(
-    ic = ic95_wilson(obitos_50mais, obitos_total, 100)
-  ) |>
-  tidyr::unnest_wider(ic, names_sep = "_") |>
-  dplyr::rename(swaroop = estimativa,
-                swaroop_li = ic_li,
-                swaroop_ls = ic_ls)
+  )
+
+# Aplica IC Wilson e junta
+ic_sw <- ic95_wilson(swaroop_base$obitos_50mais,
+                     swaroop_base$obitos_total, 100)
+names(ic_sw) <- c("swaroop", "swaroop_li", "swaroop_ls")
+
+swaroop <- dplyr::bind_cols(swaroop_base, ic_sw)
 
 salvar_parquet(swaroop,
                file.path(dir_dados_tratados,
